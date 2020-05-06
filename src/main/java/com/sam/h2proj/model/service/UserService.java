@@ -25,6 +25,16 @@ public class UserService {
 		userDao.save(user);
 	}
 	
+	public void updateUser(User user) {
+		if(userDao.existsById(user.getId())) {
+			userDao.save(user);
+		}
+	}
+	
+	public void deleteUser(Integer id) {
+		userDao.deleteById(id);
+	}
+	
 	public User getUser(Integer id) {
 		return userDao.findById(id);
 	}

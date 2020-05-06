@@ -10,6 +10,7 @@
         <property name="hbm2ddl.auto">create</property>
     
     	<mapping class="com.sam.h2proj.model.User"/>
+    	<mapping class="com.sam.h2proj.model.Article"/>
     	
     </session-factory>
 </hibernate-configuration>

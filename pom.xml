@@ -15,6 +15,14 @@
     
 
     <dependencies>
+    	<!-- https://mvnrepository.com/artifact/org.json/json -->
+		<dependency>
+		    <groupId>org.json</groupId>
+		    <artifactId>json</artifactId>
+		    <version>20190722</version>
+		</dependency>
+    	
+    
     	<!-- https://mvnrepository.com/artifact/org.springframework/spring-context -->
 		<dependency>
 		    <groupId>org.springframework</groupId>
@@ -71,7 +79,6 @@
 		    <artifactId>h2</artifactId>
 		    <version>1.4.197</version>
 		</dependency>
-			
 		
 		
         <!-- Servlet 3.0 API -->
