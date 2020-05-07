@@ -12,6 +12,8 @@ import org.springframework.orm.hibernate5.LocalSessionFactoryBuilder;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
+import com.sam.h2proj.util.Const;
+
 @Configuration
 @EnableTransactionManagement
 @ComponentScan(basePackages = "com.sam.h2proj.model")
@@ -24,10 +26,10 @@ public class SpringConfig {
 	@Bean
 	public DataSource dataSource() {
 		DriverManagerDataSource dmds = new DriverManagerDataSource();
-		dmds.setDriverClassName("org.h2.Driver");
-		dmds.setUrl("jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1");
-		dmds.setUsername("sa");
-		dmds.setPassword("");
+		dmds.setDriverClassName(Const.DB_DRIVER_CLASS_NAME);
+		dmds.setUrl(Const.DB_URL);
+		dmds.setUsername(Const.DB_USERNAME);
+		dmds.setPassword(Const.DB_PASSWORD);
 		
 		return dmds;
 	}

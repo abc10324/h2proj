@@ -19,6 +19,9 @@ import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import com.sam.h2proj.util.Page;
+import com.sam.h2proj.util.PageInfo;
+
 public class BaseDao<T,ID extends Serializable> {
 
 	@Autowired
@@ -111,6 +114,26 @@ public class BaseDao<T,ID extends Serializable> {
 	}
 	
 	/**
+	 * 取得所有的Entity
+	 * @return 包含分頁資訊的Page物件, records寫入Entity List 或 空的List
+	 */
+	public Page<T> findAll(PageInfo pageInfo) {
+		CriteriaQuery<T> criteriaQuery = getSession().getCriteriaBuilder().createQuery(entityClass);
+		Root<T> root = criteriaQuery.from(entityClass);
+		
+		criteriaQuery.select(root);
+		
+		Integer startPosition = pageInfo.getPageSize() * (pageInfo.getPageNum() - 1);
+		
+		List<T> resultList = getSession().createQuery(criteriaQuery)
+				 .setFirstResult(startPosition)
+				 .setMaxResults(pageInfo.getPageSize())
+				 .getResultList(); 
+
+		return new Page<T>(resultList, pageInfo.getPageNum(), pageInfo.getPageSize(), count());
+	}
+	
+	/**
 	 * 使用輸入的Id List取得相對應的Entity
 	 * @param ids 該Entity主鍵值的List
 	 * @return Entity List 或 空的List
@@ -124,6 +147,29 @@ public class BaseDao<T,ID extends Serializable> {
 		criteriaQuery.where(root.in(ids));
 		
 		return getSession().createQuery(criteriaQuery).getResultList();
+	} 
+	
+	/**
+	 * 使用輸入的Id List取得相對應的Entity
+	 * @param ids 該Entity主鍵值的List
+	 * @return 包含分頁資訊的Page物件, records寫入Entity List 或 空的List
+	 */
+	public Page<T> findAllByIds(Iterable<ID> ids,PageInfo pageInfo) {
+		CriteriaQuery<T> criteriaQuery = getSession().getCriteriaBuilder().createQuery(entityClass);
+		
+		Root<T> root = criteriaQuery.from(entityClass);
+		
+		criteriaQuery.select(root);
+		criteriaQuery.where(root.in(ids));
+		
+		Integer startPosition = pageInfo.getPageSize() * (pageInfo.getPageNum() - 1);
+		
+		List<T> resultList = getSession().createQuery(criteriaQuery)
+				 .setFirstResult(startPosition)
+				 .setMaxResults(pageInfo.getPageSize())
+				 .getResultList(); 
+
+		return new Page<T>(resultList, pageInfo.getPageNum(), pageInfo.getPageSize(), count());
 	} 
 	
 	/**
@@ -153,6 +199,42 @@ public class BaseDao<T,ID extends Serializable> {
 		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
 		
 		return getSession().createQuery(criteriaQuery).getResultList();
+	} 
+	
+	/**
+	 * 使用輸入的Map作為查詢參數依據 <br/>
+	 * Map內<K,V>對應為<欄位名稱(對應Entity Class內的Field Name),查詢值> <br/>
+	 * 查詢參數對應關係為等於 , SQL範例 : username = 'Sam' <br/>
+	 * 各組查詢參數間使用AND串接 , SQL範例 : username = 'Sam' AND password = '123'
+	 * @param paramMap 查詢參數Map
+	 * @return 包含分頁資訊的Page物件, records寫入Entity List 或 空的List
+	 */
+	public Page<T> findAllByParams(Map<String,Object> paramMap,PageInfo pageInfo) {
+		CriteriaBuilder criteriaBuilder = getSession().getCriteriaBuilder();
+		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+		
+		Root<T> root = criteriaQuery.from(entityClass);
+		
+		criteriaQuery.select(root);
+		
+		List<Predicate> predicates = new ArrayList<Predicate>();
+		
+		for(String key : paramMap.keySet()) {
+			if(entityFieldNameSet.contains(key)) {
+				predicates.add(criteriaBuilder.equal(root.get(key), paramMap.get(key)));
+			}
+		} 
+		
+		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+		
+		Integer startPosition = pageInfo.getPageSize() * (pageInfo.getPageNum() - 1);
+		
+		List<T> resultList = getSession().createQuery(criteriaQuery)
+										 .setFirstResult(startPosition)
+										 .setMaxResults(pageInfo.getPageSize())
+										 .getResultList(); 
+		
+		return new Page<T>(resultList, pageInfo.getPageNum(), pageInfo.getPageSize(), count());
 	} 
 	
 	/**
