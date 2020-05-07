@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sam.h2proj.model.Article;
 import com.sam.h2proj.model.dao.ArticleDao;
+import com.sam.h2proj.util.Page;
+import com.sam.h2proj.util.PageInfo;
 
 @Service
 @Transactional
@@ -41,6 +43,14 @@ public class ArticleService {
 	
 	public List<Article> getArticleList(Map<String,Object> paramMap){
 		return articleDao.findAllByParams(paramMap);
+	}
+	
+	public Page<Article> getArticleListWithPages(Map<String,Object> paramMap){
+		return articleDao.findAllByParams(paramMap,getPageInfo(paramMap));
+	}
+	
+	private PageInfo getPageInfo(Map<String,Object> paramMap) {
+		return new PageInfo(paramMap);
 	}
 	
 	

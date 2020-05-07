@@ -12,6 +12,7 @@ import java.util.Set;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -21,6 +22,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import com.sam.h2proj.util.Page;
 import com.sam.h2proj.util.PageInfo;
+import com.sam.h2proj.util.PageInfo.Sort;
+import com.sam.h2proj.util.PageInfo.Sort.Direction;
 
 public class BaseDao<T,ID extends Serializable> {
 
@@ -105,7 +108,9 @@ public class BaseDao<T,ID extends Serializable> {
 	 * @return Entity List 或 空的List
 	 */
 	public List<T> findAll() {
-		CriteriaQuery<T> criteriaQuery = getSession().getCriteriaBuilder().createQuery(entityClass);
+		CriteriaBuilder criteriaBuilder = getSession().getCriteriaBuilder();
+		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+		
 		Root<T> root = criteriaQuery.from(entityClass);
 		
 		criteriaQuery.select(root);
@@ -118,10 +123,18 @@ public class BaseDao<T,ID extends Serializable> {
 	 * @return 包含分頁資訊的Page物件, records寫入Entity List 或 空的List
 	 */
 	public Page<T> findAll(PageInfo pageInfo) {
-		CriteriaQuery<T> criteriaQuery = getSession().getCriteriaBuilder().createQuery(entityClass);
+		CriteriaBuilder criteriaBuilder = getSession().getCriteriaBuilder();
+		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+		
 		Root<T> root = criteriaQuery.from(entityClass);
 		
 		criteriaQuery.select(root);
+		
+		// 若有排序的資訊, 則設定排序
+		if(pageInfo.hasSortInfo()) {
+			System.out.println("Here");
+			criteriaQuery.orderBy(getOrderList(criteriaBuilder, root, pageInfo.getSort()));
+		}
 		
 		Integer startPosition = pageInfo.getPageSize() * (pageInfo.getPageNum() - 1);
 		
@@ -139,7 +152,8 @@ public class BaseDao<T,ID extends Serializable> {
 	 * @return Entity List 或 空的List
 	 */
 	public List<T> findAllByIds(Iterable<ID> ids) {
-		CriteriaQuery<T> criteriaQuery = getSession().getCriteriaBuilder().createQuery(entityClass);
+		CriteriaBuilder criteriaBuilder = getSession().getCriteriaBuilder();
+		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
 		
 		Root<T> root = criteriaQuery.from(entityClass);
 		
@@ -155,19 +169,25 @@ public class BaseDao<T,ID extends Serializable> {
 	 * @return 包含分頁資訊的Page物件, records寫入Entity List 或 空的List
 	 */
 	public Page<T> findAllByIds(Iterable<ID> ids,PageInfo pageInfo) {
-		CriteriaQuery<T> criteriaQuery = getSession().getCriteriaBuilder().createQuery(entityClass);
+		CriteriaBuilder criteriaBuilder = getSession().getCriteriaBuilder();
+		CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
 		
 		Root<T> root = criteriaQuery.from(entityClass);
 		
 		criteriaQuery.select(root);
 		criteriaQuery.where(root.in(ids));
 		
+		// 若有排序的資訊, 則設定排序
+		if(pageInfo.hasSortInfo()) {
+			criteriaQuery.orderBy(getOrderList(criteriaBuilder, root, pageInfo.getSort()));
+		}
+		
 		Integer startPosition = pageInfo.getPageSize() * (pageInfo.getPageNum() - 1);
 		
 		List<T> resultList = getSession().createQuery(criteriaQuery)
 				 .setFirstResult(startPosition)
 				 .setMaxResults(pageInfo.getPageSize())
-				 .getResultList(); 
+				 .getResultList();
 
 		return new Page<T>(resultList, pageInfo.getPageNum(), pageInfo.getPageSize(), count());
 	} 
@@ -226,6 +246,11 @@ public class BaseDao<T,ID extends Serializable> {
 		} 
 		
 		criteriaQuery.where(predicates.toArray(new Predicate[predicates.size()]));
+		
+		// 若有排序的資訊, 則設定排序
+		if(pageInfo.hasSortInfo()) {
+			criteriaQuery.orderBy(getOrderList(criteriaBuilder, root, pageInfo.getSort()));
+		}
 		
 		Integer startPosition = pageInfo.getPageSize() * (pageInfo.getPageNum() - 1);
 		
@@ -307,6 +332,22 @@ public class BaseDao<T,ID extends Serializable> {
 		criteriaQuery.select(criteriaBuilder.count(root));
 		
 		return getSession().createQuery(criteriaQuery).getSingleResult();
+	}
+	
+	private List<Order> getOrderList(CriteriaBuilder criteriaBuilder,Root<T> root, Sort sort){
+		List<Order> orderList = new ArrayList<>();
+		
+		for(String columnName : sort.getColumeNames()) {
+			if(entityFieldNameSet.contains(columnName)) {
+				if(Direction.ASC.equals(sort.getDirection())) {
+					orderList.add(criteriaBuilder.asc(root.get(columnName)));
+				} else if(Direction.DESC.equals(sort.getDirection())) {
+					orderList.add(criteriaBuilder.desc(root.get(columnName)));
+				}
+			}
+		}
+		
+		return orderList;
 	}
 	
 	

@@ -13,6 +13,18 @@ public class Const {
 	
 	/** 目前頁碼 參數名稱 **/
 	public static final String PAGE_NUM = "pageNum";
+	
+	/** 排序欄位 參數名稱 **/
+	public static final String ORDER_COLUMNS = "columnNames";
+	
+	/** 排序方向 參數名稱 **/
+	public static final String ORDER_DIRECTION = "direction";
+	
+	/** 排序方向 升冪**/
+	public static final String ORDER_ASC = "ASC";
+	
+	/** 排序方向 降冪 **/
+	public static final String ORDER_DESC = "DESC";
 
 	/** 資料庫連線字串 **/
 	public static final String DB_URL = "jdbc:h2:mem:testdb;DB_CLOSE_DELAY=-1";

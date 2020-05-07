@@ -23,8 +23,9 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.web.context.WebApplicationContext;
 
 import com.sam.h2proj.model.Article;
-import com.sam.h2proj.model.User;
 import com.sam.h2proj.model.service.ArticleService;
+import com.sam.h2proj.util.Const;
+import com.sam.h2proj.util.Page;
 
 /**
  * Restful API DEMO
@@ -91,6 +92,15 @@ public class ArticleServlet extends HttpServlet {
     	return result;
     }
     
+    /**
+     * 檢查參數是否含有分頁所需參數 pageSize & pageNum
+     * @param paramMap
+     * @return 是否含有分頁所需參數
+     */
+    private boolean hasPageInfo(Map<String,Object> paramMap) {
+    	return paramMap.containsKey(Const.PAGE_NUM) && paramMap.containsKey(Const.PAGE_SIZE);
+    }
+    
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
 	 */
@@ -106,9 +116,19 @@ public class ArticleServlet extends HttpServlet {
 		if(pathInfo == null) {
 			
 			Map<String,Object> paramMap = getParamMap(request);
-			List<Article> resultList = articleService.getArticleList(paramMap);
+			String resultJsonStr = "";
 			
-			response.getWriter().append(getJsonString(resultList));
+			if(hasPageInfo(paramMap)) {
+				// 含有分頁參數, 回傳帶有分頁訊息的清單資料 (部分輸出, 依據指定的每業資料筆數以及頁碼而定)
+				Page<Article> resultList = articleService.getArticleListWithPages(paramMap);
+				resultJsonStr = getJsonString(resultList);
+			} else {
+				// 不含分頁參數, 回傳單純的清單資料 (全輸出, 查到多少輸出多少)
+				List<Article> resultList = articleService.getArticleList(paramMap);
+				resultJsonStr = getJsonString(resultList);
+			}
+			
+			response.getWriter().append(resultJsonStr);
 			
 			return;
 		} else if(pathInfo.lastIndexOf("/") == 0 && pathInfo.length() > 1) {

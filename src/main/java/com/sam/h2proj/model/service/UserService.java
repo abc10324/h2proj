@@ -9,6 +9,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.sam.h2proj.model.User;
 import com.sam.h2proj.model.dao.UserDaoImpl;
+import com.sam.h2proj.util.Page;
+import com.sam.h2proj.util.PageInfo;
 
 @Service
 @Transactional
@@ -45,6 +47,14 @@ public class UserService {
 	
 	public List<User> getAllUser(Map<String,Object> paramMap){
 		return userDao.findAllByParams(paramMap);
+	}
+	
+	public Page<User> getAllUserWithPages(Map<String,Object> paramMap){
+		return userDao.findAllByParams(paramMap,getPageInfo(paramMap));
+	}
+	
+	private PageInfo getPageInfo(Map<String,Object> paramMap) {
+		return new PageInfo(paramMap);
 	}
 	
 }
